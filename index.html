@@ -36,19 +36,26 @@
     const html5QrCode = new Html5Qrcode("reader");
 
     function onScanSuccess(decodedText) {
+      // 1. Arrêter le scanner
       html5QrCode.stop().then(() => {
         resultEl.innerText = "Donnée mise à jour";
 
-        // Redirection GET avec la valeur du QR code
-        const baseUrl = "https://nohoarii96.github.io/recuperation/";
-        const redirectUrl = ${baseUrl}?qr=${encodeURIComponent(decodedText)};
+        // 2. Envoyer la valeur scannée à ton URL
+        const url = "https://TON_URL_DE_RECEPTION.com"; // ← À remplacer
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ qr: decodedText })
+        }).catch(err => {
+          console.error("Erreur lors de l'envoi :", err);
+        });
 
+        // 3. Attendre 3 secondes puis fermer
         setTimeout(() => {
-          // Redirige vers l'URL avec la donnée
-          window.location.href = redirectUrl;
-
-          // Si utilisé en WebView ou app hybride, peut aussi tenter de fermer :
-          // window.close();
+          // Tentative de fermeture (fonctionne en WebView ou via raccourci)
+          window.close();
+          // Fallback : rediriger vers une page vide ou de confirmation
+          window.location.href = "about:blank";
         }, 3000);
       });
     }
