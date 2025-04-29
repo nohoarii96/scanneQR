@@ -4,62 +4,72 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scan QR Code</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       text-align: center;
-      background-color: #f0f0f0;
-      padding: 20px;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
     }
     #reader {
       width: 100%;
       max-width: 400px;
-      margin: auto;
+      margin: 20px auto;
     }
-    #status {
-      font-size: 18px;
+    #result {
       margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
       color: green;
     }
   </style>
 </head>
 <body>
-  <h2>Scan QR Code</h2>
+  <h2>Scan automatique du QR Code</h2>
   <div id="reader"></div>
-  <div id="status"></div>
+  <div id="result">En attente du scan...</div>
 
   <script>
+    const resultEl = document.getElementById("result");
     const html5QrCode = new Html5Qrcode("reader");
 
-    const config = {
-      fps: 10,
-      qrbox: 250,
-      facingMode: { exact: "environment" } // Caméra arrière
-    };
-
-    function onScanSuccess(decodedText, decodedResult) {
-      document.getElementById("status").innerText = "Donnée mise à jour...";
+    function onScanSuccess(decodedText) {
       html5QrCode.stop().then(() => {
+        resultEl.innerText = "Donnée mise à jour";
+
+        // Redirection GET avec la valeur du QR code
+        const baseUrl = "https://nohoarii96.github.io/recuperation/";
+        const redirectUrl = ${baseUrl}?qr=${encodeURIComponent(decodedText)};
+
         setTimeout(() => {
-          const encoded = encodeURIComponent(decodedText);
-          window.location.href = https://nohoarii96.github.io/recuperation/?qr=${encoded};
-        }, 3000); // 3 secondes d’attente
-      }).catch(err => console.error("Erreur arrêt caméra :", err));
+          // Redirige vers l'URL avec la donnée
+          window.location.href = redirectUrl;
+
+          // Si utilisé en WebView ou app hybride, peut aussi tenter de fermer :
+          // window.close();
+        }, 3000);
+      });
     }
 
-    // Démarrer le scan immédiatement
     Html5Qrcode.getCameras().then(devices => {
-      if (devices && devices.length) {
-        const rearCamera = devices.find(device => device.label.toLowerCase().includes("back")) || devices[0];
+      if (devices.length) {
+        const backCamera = devices.find(device =>
+          device.label.toLowerCase().includes("back") ||
+          device.label.toLowerCase().includes("environment")
+        ) || devices[0];
         html5QrCode.start(
-          rearCamera.id,
-          config,
-          onScanSuccess,
-          error => { /* Ignorer les erreurs de scan */ }
-        ).catch(err => console.error("Erreur lancement caméra :", err));
+          backCamera.id,
+          { fps: 10, qrbox: 250 },
+          onScanSuccess
+        );
+      } else {
+        resultEl.innerText = "Aucune caméra détectée.";
       }
-    }).catch(err => console.error("Erreur détection caméra :", err));
+    }).catch(err => {
+      resultEl.innerText = "Erreur d'accès caméra : " + err;
+    });
   </script>
 </body>
 </html>
