@@ -2,24 +2,83 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Scan QR Code</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scanner un QR Code</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px auto;
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+      color: green;
+    }
+  </style>
 </head>
 <body>
-  <h2>Scanner un QR Code</h2>
-  <div id="reader" style="width:300px;"></div>
-  <p>Valeur du QR : <span id="result"></span></p>
+  <h2>Scan automatique du QR Code</h2>
+  <div id="reader"></div>
+  <div id="message">En attente du scan...</div>
 
   <script>
-    function onScanSuccess(decodedText, decodedResult) {
-      document.getElementById("result").innerText = decodedText;
-      html5QrcodeScanner.clear(); // Arrête le scanner une fois le QR détecté
+    const messageEl = document.getElementById("message");
+    const html5QrCode = new Html5Qrcode("reader");
+
+    function sendData(qrValue) {
+      // Création d'un formulaire caché pour envoyer la donnée
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "recuperation.php"; // <-- la page où tu récupères la valeur
+      form.style.display = "none";
+
+      const input = document.createElement("input");
+      input.name = "qr_value";
+      input.value = qrValue;
+      form.appendChild(input);
+      document.body.appendChild(form);
+
+      form.submit();
     }
 
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader", { fps: 10, qrbox: 250 });
+    function onScanSuccess(decodedText) {
+      messageEl.innerText = "Donnée mise à jour.";
+      html5QrCode.stop().then(() => {
+        setTimeout(() => {
+          sendData(decodedText); // Envoie la valeur scannée
+        }, 1000); // Attend 1 seconde pour que l'utilisateur voie le message
+      });
+    }
 
-    html5QrcodeScanner.render(onScanSuccess);
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        const backCamera = devices.find(device =>
+          device.label.toLowerCase().includes("back") ||
+          device.label.toLowerCase().includes("rear") ||
+          device.label.toLowerCase().includes("environment")
+        ) || devices[0];
+
+        html5QrCode.start(
+          backCamera.id,
+          { fps: 10, qrbox: 250 },
+          onScanSuccess
+        );
+      } else {
+        messageEl.innerText = "Aucune caméra détectée.";
+      }
+    }).catch(err => {
+      messageEl.innerText = "Erreur d'accès caméra : " + err;
+    });
   </script>
 </body>
 </html>
