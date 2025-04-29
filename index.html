@@ -40,8 +40,8 @@
         resultEl.innerText = "Donnée mise à jour";
 
         // Envoie silencieux des données via requête GET (sans redirection)
-        const baseUrl = "https://nohoarii96.github.io/recuperation/";
-        const queryUrl = `${baseUrl}?qr=${encodeURIComponent(decodedText)}`;
+        const baseUrl = "https://script.google.com/macros/s/TON_ID_SCRIPT/exec";
+        const queryUrl = `${baseUrl}?valeur=${encodeURIComponent(decodedText)}`;
 
         // Appel en arrière-plan (pas visible par l'utilisateur)
         fetch(queryUrl, { method: 'GET', mode: 'no-cors' });
