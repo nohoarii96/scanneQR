@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Scan QR Code</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
@@ -37,22 +37,19 @@
 
     function onScanSuccess(decodedText) {
       html5QrCode.stop().then(() => {
-        resultEl.innerText = "Donnée envoyée : " + decodedText;
+        resultEl.innerText = "Donnée mise à jour";
 
-        const endpointUrl = "https://nohoarii96.github.io/recuperation/";
-        const urlWithParam = `${endpointUrl}?qr=${encodeURIComponent(decodedText)}`;
+        // Envoie silencieux des données via requête GET (sans redirection)
+        const baseUrl = "https://nohoarii96.github.io/recuperation/";
+        const queryUrl = `${baseUrl}?qr=${encodeURIComponent(decodedText)}`;
 
-        // Envoi de la donnée en GET (peut aussi se faire en POST)
-        fetch(urlWithParam)
-          .then(() => {
-            setTimeout(() => {
-              // Tenter de fermer l'application (fonctionne dans certaines WebView)
-              window.close();
-            }, 1000);
-          })
-          .catch(err => {
-            resultEl.innerText = "Erreur d'envoi : " + err;
-          });
+        // Appel en arrière-plan (pas visible par l'utilisateur)
+        fetch(queryUrl, { method: 'GET', mode: 'no-cors' });
+
+        // Tente de fermer automatiquement l'onglet (fonctionne en WebView ou via interaction utilisateur)
+        setTimeout(() => {
+          window.close();
+        }, 2000);
       });
     }
 
@@ -62,7 +59,6 @@
           device.label.toLowerCase().includes("back") ||
           device.label.toLowerCase().includes("environment")
         ) || devices[0];
-
         html5QrCode.start(
           backCamera.id,
           { fps: 10, qrbox: 250 },
