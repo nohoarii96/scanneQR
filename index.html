@@ -9,66 +9,60 @@
     body {
       font-family: sans-serif;
       text-align: center;
-      padding: 20px;
-      background-color: #f4f4f4;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
     }
     #reader {
       width: 100%;
-      max-width: 320px;
-      margin: auto;
-      border-radius: 10px;
-      overflow: hidden;
+      max-width: 400px;
+      margin: 20px auto;
     }
     #result {
-      font-weight: bold;
-      color: green;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px 20px;
+      margin-top: 20px;
       font-size: 18px;
-      border: none;
-      border-radius: 5px;
-      background-color: #0066cc;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #004c99;
+      color: green;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h2>Scanner un QR Code</h2>
+  <h2>Scan automatique du QR Code</h2>
   <div id="reader"></div>
-  <p>Valeur du QR : <span id="result">Aucun</span></p>
-  <button onclick="rescan()">Rescanner</button>
+  <div id="result">En attente du scan...</div>
 
   <script>
-    let html5QrScanner;
+    const resultEl = document.getElementById("result");
 
-    function onScanSuccess(decodedText, decodedResult) {
-      document.getElementById("result").innerText = decodedText;
-      html5QrScanner.clear(); // Arrêter le scanner après détection
-    }
-
-    function rescan() {
-      document.getElementById("result").innerText = "En attente...";
-      html5QrScanner.clear().then(() => {
-        html5QrScanner.render(onScanSuccess);
+    function onScanSuccess(decodedText) {
+      resultEl.innerText = "QR détecté : " + decodedText;
+      html5QrCode.stop().then(() => {
+        console.log("Scan arrêté.");
       });
     }
 
-    // Démarrage initial avec la caméra arrière si possible
-    const config = {
-      fps: 10,
-      qrbox: 250,
-      rememberLastUsedCamera: true,
-      supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
-    };
+    const html5QrCode = new Html5Qrcode("reader");
 
-    html5QrScanner = new Html5QrcodeScanner("reader", config, false);
-    html5QrScanner.render(onScanSuccess);
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices && devices.length) {
+        // Cherche une caméra arrière (généralement avec "back" ou "environment" dans le label)
+        const backCamera = devices.find(device =>
+          device.label.toLowerCase().includes("back") ||
+          device.label.toLowerCase().includes("rear") ||
+          device.label.toLowerCase().includes("environment")
+        ) || devices[0]; // Fallback première caméra
+
+        html5QrCode.start(
+          backCamera.id,
+          { fps: 10, qrbox: 250 },
+          onScanSuccess
+        );
+      } else {
+        resultEl.innerText = "Aucune caméra détectée.";
+      }
+    }).catch(err => {
+      resultEl.innerText = "Erreur d'accès caméra : " + err;
+    });
   </script>
 </body>
 </html>
