@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Scan QR Code</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
@@ -35,19 +35,26 @@
     const resultEl = document.getElementById("result");
     const html5QrCode = new Html5Qrcode("reader");
 
-function onScanSuccess(decodedText) {
-  html5QrCode.stop().then(() => {
-    resultEl.innerText = "Donnée mise à jour";
+    function onScanSuccess(decodedText) {
+      html5QrCode.stop().then(() => {
+        resultEl.innerText = "Donnée envoyée : " + decodedText;
 
-    // Redirection GET avec la valeur du QR code
-    const baseUrl = "https://nohoarii96.github.io/recuperation/";
-    const redirectUrl = `${baseUrl}?qr=${encodeURIComponent(decodedText)}`;
+        const endpointUrl = "https://nohoarii96.github.io/recuperation/";
+        const urlWithParam = `${endpointUrl}?qr=${encodeURIComponent(decodedText)}`;
 
-    setTimeout(() => {
-      window.location.href = redirectUrl;
-    }, 3000);
-  });
-}
+        // Envoi de la donnée en GET (peut aussi se faire en POST)
+        fetch(urlWithParam)
+          .then(() => {
+            setTimeout(() => {
+              // Tenter de fermer l'application (fonctionne dans certaines WebView)
+              window.close();
+            }, 1000);
+          })
+          .catch(err => {
+            resultEl.innerText = "Erreur d'envoi : " + err;
+          });
+      });
+    }
 
     Html5Qrcode.getCameras().then(devices => {
       if (devices.length) {
@@ -55,6 +62,7 @@ function onScanSuccess(decodedText) {
           device.label.toLowerCase().includes("back") ||
           device.label.toLowerCase().includes("environment")
         ) || devices[0];
+
         html5QrCode.start(
           backCamera.id,
           { fps: 10, qrbox: 250 },
