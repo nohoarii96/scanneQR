@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scan QR Code</title>
+  <title>Scanner un QR Code</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
@@ -18,39 +18,55 @@
       max-width: 400px;
       margin: 20px auto;
     }
-    #result {
+    #message {
       margin-top: 20px;
-      font-size: 18px;
-      color: green;
+      font-size: 20px;
       font-weight: bold;
+      color: green;
     }
   </style>
 </head>
 <body>
   <h2>Scan automatique du QR Code</h2>
   <div id="reader"></div>
-  <div id="result">En attente du scan...</div>
+  <div id="message">En attente du scan...</div>
 
   <script>
-    const resultEl = document.getElementById("result");
+    const messageEl = document.getElementById("message");
+    const html5QrCode = new Html5Qrcode("reader");
+
+    function sendData(qrValue) {
+      // Création d'un formulaire caché pour envoyer la donnée
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = "recuperation.php"; // <-- la page où tu récupères la valeur
+      form.style.display = "none";
+
+      const input = document.createElement("input");
+      input.name = "qr_value";
+      input.value = qrValue;
+      form.appendChild(input);
+      document.body.appendChild(form);
+
+      form.submit();
+    }
 
     function onScanSuccess(decodedText) {
-      resultEl.innerText = "QR détecté : " + decodedText;
+      messageEl.innerText = "Donnée mise à jour.";
       html5QrCode.stop().then(() => {
-        console.log("Scan arrêté.");
+        setTimeout(() => {
+          sendData(decodedText); // Envoie la valeur scannée
+        }, 1000); // Attend 1 seconde pour que l'utilisateur voie le message
       });
     }
 
-    const html5QrCode = new Html5Qrcode("reader");
-
     Html5Qrcode.getCameras().then(devices => {
       if (devices && devices.length) {
-        // Cherche une caméra arrière (généralement avec "back" ou "environment" dans le label)
         const backCamera = devices.find(device =>
           device.label.toLowerCase().includes("back") ||
           device.label.toLowerCase().includes("rear") ||
           device.label.toLowerCase().includes("environment")
-        ) || devices[0]; // Fallback première caméra
+        ) || devices[0];
 
         html5QrCode.start(
           backCamera.id,
@@ -58,10 +74,10 @@
           onScanSuccess
         );
       } else {
-        resultEl.innerText = "Aucune caméra détectée.";
+        messageEl.innerText = "Aucune caméra détectée.";
       }
     }).catch(err => {
-      resultEl.innerText = "Erreur d'accès caméra : " + err;
+      messageEl.innerText = "Erreur d'accès caméra : " + err;
     });
   </script>
 </body>
