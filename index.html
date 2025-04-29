@@ -35,23 +35,19 @@
     const resultEl = document.getElementById("result");
     const html5QrCode = new Html5Qrcode("reader");
 
-    function onScanSuccess(decodedText) {
-      html5QrCode.stop().then(() => {
-        resultEl.innerText = "Donnée mise à jour";
+function onScanSuccess(decodedText) {
+  html5QrCode.stop().then(() => {
+    resultEl.innerText = "Donnée mise à jour";
 
-        // Redirection GET avec la valeur du QR code
-        const baseUrl = "https://nohoarii96.github.io/recuperation/";
-        const redirectUrl = ${baseUrl}?qr=${encodeURIComponent(decodedText)};
+    // Redirection GET avec la valeur du QR code
+    const baseUrl = "https://nohoarii96.github.io/recuperation/";
+    const redirectUrl = `${baseUrl}?qr=${encodeURIComponent(decodedText)}`;
 
-        setTimeout(() => {
-          // Redirige vers l'URL avec la donnée
-          window.location.href = https://nohoarii96.github.io/recuperation/?qr=test123;
-
-          // Si utilisé en WebView ou app hybride, peut aussi tenter de fermer :
-          // window.close();
-        }, 3000);
-      });
-    }
+    setTimeout(() => {
+      window.location.href = redirectUrl;
+    }, 3000);
+  });
+}
 
     Html5Qrcode.getCameras().then(devices => {
       if (devices.length) {
