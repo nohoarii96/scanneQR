@@ -2,24 +2,81 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scan QR Code</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px auto;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: green;
+    }
+  </style>
 </head>
 <body>
-  <h2>Scanner un QR Code</h2>
-  <div id="reader" style="width:300px;"></div>
-  <p>Valeur du QR : <span id="result"></span></p>
+  <h2>Scan automatique du QR Code</h2>
+  <div id="reader"></div>
+  <div id="result">En attente du scan...</div>
 
   <script>
-    function onScanSuccess(decodedText, decodedResult) {
-      document.getElementById("result").innerText = decodedText;
-      html5QrcodeScanner.clear(); // Arrête le scanner une fois le QR détecté
+    const resultEl = document.getElementById("result");
+    const html5QrCode = new Html5Qrcode("reader");
+
+    function onScanSuccess(decodedText) {
+      // 1. Arrêter le scanner
+      html5QrCode.stop().then(() => {
+        resultEl.innerText = "Donnée mise à jour";
+
+        // 2. Envoyer la valeur scannée à ton URL
+        const url = "https://nohoarii96.github.io/recuperation/"; // ← À remplacer
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ qr: decodedText })
+        }).catch(err => {
+          console.error("Erreur lors de l'envoi :", err);
+        });
+
+        // 3. Attendre 3 secondes puis fermer
+        setTimeout(() => {
+          // Tentative de fermeture (fonctionne en WebView ou via raccourci)
+          window.close();
+          // Fallback : rediriger vers une page vide ou de confirmation
+          window.location.href = "about:blank";
+        }, 3000);
+      });
     }
 
-    const html5QrcodeScanner = new Html5QrcodeScanner(
-      "reader", { fps: 10, qrbox: 250 });
-
-    html5QrcodeScanner.render(onScanSuccess);
+    Html5Qrcode.getCameras().then(devices => {
+      if (devices.length) {
+        const backCamera = devices.find(device =>
+          device.label.toLowerCase().includes("back") ||
+          device.label.toLowerCase().includes("environment")
+        ) || devices[0];
+        html5QrCode.start(
+          backCamera.id,
+          { fps: 10, qrbox: 250 },
+          onScanSuccess
+        );
+      } else {
+        resultEl.innerText = "Aucune caméra détectée.";
+      }
+    }).catch(err => {
+      resultEl.innerText = "Erreur d'accès caméra : " + err;
+    });
   </script>
 </body>
 </html>
