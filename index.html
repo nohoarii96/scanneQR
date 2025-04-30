@@ -29,24 +29,28 @@
 <body>
   <h2>Scan automatique du QR Code</h2>
   <div id="reader"></div>
-  <div id="result">En attente du scan...</div>
+  <div id="result">Initialisation de la caméra...</div>
 
   <script>
     const resultEl = document.getElementById("result");
     const html5QrCode = new Html5Qrcode("reader");
+    let alreadyScanned = false;
 
     function onScanSuccess(decodedText) {
-      html5QrCode.stop().then(() => {
-        resultEl.innerText = "Donnée mise à jour";
+      if (alreadyScanned) return;
+      alreadyScanned = true;
 
-        // Envoie silencieux des données via requête GET (sans redirection)
-        const baseUrl = "https://script.google.com/macros/s/AKfycbyNgk17EaDuX-dsb7zfotL1TuY0RjKt4ENN_EkUN0eJyMm8yZdmGHRnYOsv-Pd3urmO/exec";
+      html5QrCode.stop().then(() => {
+        resultEl.innerText = "Donnée envoyée, merci !";
+
+        const baseUrl = "https://script.google.com/macros/s/AKfycbyNgk17EaDuX-dsb7zfotL1TuY0RjKt4ENN_EkUN0eJyMm8yZdmGHRnYOsv-Pd3urmO/exec"; // Remplace TON_ID
         const queryUrl = `${baseUrl}?valeur=${encodeURIComponent(decodedText)}`;
 
-        // Appel en arrière-plan (pas visible par l'utilisateur)
-        fetch(queryUrl, { method: 'GET', mode: 'no-cors' });
+        // Appel universel via image invisible (fonctionne même en WebView)
+        const img = new Image();
+        img.src = queryUrl;
 
-        // Tente de fermer automatiquement l'onglet (fonctionne en WebView ou via interaction utilisateur)
+        // Optionnel : fermeture automatique
         setTimeout(() => {
           window.close();
         }, 2000);
@@ -59,11 +63,16 @@
           device.label.toLowerCase().includes("back") ||
           device.label.toLowerCase().includes("environment")
         ) || devices[0];
+
         html5QrCode.start(
           backCamera.id,
           { fps: 10, qrbox: 250 },
-          onScanSuccess
+          onScanSuccess,
+          error => {
+            console.warn("Échec de scan :", error);
+          }
         );
+        resultEl.innerText = "Scan en cours...";
       } else {
         resultEl.innerText = "Aucune caméra détectée.";
       }
