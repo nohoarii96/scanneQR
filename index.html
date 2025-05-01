@@ -46,9 +46,8 @@
         const baseUrl = "https://nohoarii96.github.io/recuperation/"; // Remplace TON_ID
         const queryUrl = `${baseUrl}?valeur=${encodeURIComponent(decodedText)}`;
 
-        // Appel universel via image invisible (fonctionne même en WebView)
-        const img = new Image();
-        img.src = queryUrl;
+        // Appel à une fonction VBA pour envoyer le lien à Excel
+        window.external.SendLinkToExcel(queryUrl); // Fonction pour envoyer le lien à Excel
 
         // Optionnel : fermeture automatique
         setTimeout(() => {
