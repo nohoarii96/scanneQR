@@ -41,7 +41,9 @@
 
         // Redirection GET avec la valeur du QR code
         const baseUrl = "https://nohoarii96.github.io/recuperation/";
-        const redirectUrl = `${baseUrl}?qr=${encodeURIComponent(decodedText)}`;
+        sessionStorage.setItem("qr_value", decodedText);
+        window.location.href = baseUrl; // redirection sans ?qr=...
+
 
         setTimeout(() => {
           // Redirige vers l'URL avec la donnée
