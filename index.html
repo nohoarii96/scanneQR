@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scan QR Code</title>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
@@ -29,30 +29,34 @@
 <body>
   <h2>Scan automatique du QR Code</h2>
   <div id="reader"></div>
-  <div id="result">Initialisation de la caméra...</div>
+  <div id="result">En attente du scan...</div>
 
   <script>
     const resultEl = document.getElementById("result");
     const html5QrCode = new Html5Qrcode("reader");
-    let alreadyScanned = false;
 
     function onScanSuccess(decodedText) {
-      if (alreadyScanned) return;
-      alreadyScanned = true;
-
+      // 1. Arrêter le scanner
       html5QrCode.stop().then(() => {
-        resultEl.innerText = "Donnée envoyée, merci !";
+        resultEl.innerText = "Donnée mise à jour";
 
-        const baseUrl = "https://nohoarii96.github.io/recuperation/"; // Remplace TON_ID
-        const queryUrl = `${baseUrl}?valeur=${encodeURIComponent(decodedText)}`;
+        // 2. Envoyer la valeur scannée à ton URL
+        const url = "https://TON_URL_DE_RECEPTION.com"; // ← À remplacer
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ qr: decodedText })
+        }).catch(err => {
+          console.error("Erreur lors de l'envoi :", err);
+        });
 
-        // Appel à une fonction VBA pour envoyer le lien à Excel
-        window.external.SendLinkToExcel(queryUrl); // Fonction pour envoyer le lien à Excel
-
-        // Optionnel : fermeture automatique
+        // 3. Attendre 3 secondes puis fermer
         setTimeout(() => {
+          // Tentative de fermeture (fonctionne en WebView ou via raccourci)
           window.close();
-        }, 2000);
+          // Fallback : rediriger vers une page vide ou de confirmation
+          window.location.href = "about:blank";
+        }, 3000);
       });
     }
 
@@ -62,16 +66,11 @@
           device.label.toLowerCase().includes("back") ||
           device.label.toLowerCase().includes("environment")
         ) || devices[0];
-
         html5QrCode.start(
           backCamera.id,
           { fps: 10, qrbox: 250 },
-          onScanSuccess,
-          error => {
-            console.warn("Échec de scan :", error);
-          }
+          onScanSuccess
         );
-        resultEl.innerText = "Scan en cours...";
       } else {
         resultEl.innerText = "Aucune caméra détectée.";
       }
