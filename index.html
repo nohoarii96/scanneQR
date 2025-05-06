@@ -1,117 +1,43 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scan QR Code</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Identification</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
       background-color: #f9f9f9;
-      margin: 0;
-      padding: 0;
+      padding: 50px;
     }
-    .hidden { display: none; }
-    #form-container, #reader, #result {
-      max-width: 400px;
-      margin: 20px auto;
-    }
-    input {
+    input, button {
       padding: 10px;
-      margin: 5px;
-      width: 90%;
+      margin: 10px;
       font-size: 16px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-    }
-    #result {
-      margin-top: 20px;
-      font-size: 18px;
-      font-weight: bold;
-      color: green;
+      width: 200px;
     }
   </style>
 </head>
 <body>
-
-  <h2>Identification</h2>
-  <div id="form-container">
-    <input type="text" id="nom" placeholder="Nom" required>
-    <input type="text" id="prenom" placeholder="Prénom" required>
-    <button onclick="validerIdentite()">Valider</button>
-  </div>
-
-  <div id="reader" class="hidden"></div>
-  <div id="result" class="hidden">En attente du scan...</div>
+  <h2>Veuillez entrer votre nom et prénom</h2>
+  <input type="text" id="nom" placeholder="Nom" /><br>
+  <input type="text" id="prenom" placeholder="Prénom" /><br>
+  <button onclick="startScan()">Commencer</button>
 
   <script>
-    const nomInput = document.getElementById("nom");
-    const prenomInput = document.getElementById("prenom");
-    const formContainer = document.getElementById("form-container");
-    const reader = document.getElementById("reader");
-    const resultEl = document.getElementById("result");
-    const html5QrCode = new Html5Qrcode("reader");
-
-    function validerIdentite() {
-      const nom = nomInput.value.trim();
-      const prenom = prenomInput.value.trim();
+    function startScan() {
+      const nom = encodeURIComponent(document.getElementById('nom').value.trim());
+      const prenom = encodeURIComponent(document.getElementById('prenom').value.trim());
 
       if (!nom || !prenom) {
-        alert("Veuillez entrer votre nom et prénom.");
+        alert("Merci de remplir les deux champs !");
         return;
       }
 
-      // Stockage local
-      const identite = { nom, prenom };
-      localStorage.setItem("identite_utilisateur", JSON.stringify(identite));
-
-      formContainer.classList.add("hidden");
-      reader.classList.remove("hidden");
-      resultEl.classList.remove("hidden");
-
-      demarrerScan();
-    }
-
-    function demarrerScan() {
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices.length) {
-          const backCamera = devices.find(device =>
-            device.label.toLowerCase().includes("back") ||
-            device.label.toLowerCase().includes("environment")
-          ) || devices[0];
-
-          html5QrCode.start(
-            backCamera.id,
-            { fps: 10, qrbox: 250 },
-            onScanSuccess
-          );
-        } else {
-          resultEl.innerText = "Aucune caméra détectée.";
-        }
-      }).catch(err => {
-        resultEl.innerText = "Erreur d'accès caméra : " + err;
-      });
-    }
-
-    function onScanSuccess(decodedText) {
-      html5QrCode.stop().then(() => {
-        const identite = JSON.parse(localStorage.getItem("identite_utilisateur") || "{}");
-        resultEl.innerText = `QR scanné pour ${identite.nom} ${identite.prenom}`;
-
-        const baseUrl = "https://nohoarii96.github.io/recuperation/";
-        const redirectUrl = `${baseUrl}?qr=${encodeURIComponent(decodedText)}&nom=${encodeURIComponent(identite.nom)}&prenom=${encodeURIComponent(identite.prenom)}`;
-
-        // Redirection après 3 secondes
-        setTimeout(() => {
-          window.location.href = redirectUrl;
-        }, 3000);
-      });
+      // Redirection vers page de scan avec nom/prénom dans l’URL
+      window.location.href = `scan.html?nom=${nom}&prenom=${prenom}`;
     }
   </script>
-
 </body>
 </html>
