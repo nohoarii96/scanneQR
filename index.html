@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Identification</title>
+  <title>Scan en cours...</title>
   <style>
     body {
       font-family: sans-serif;
@@ -11,33 +11,35 @@
       background-color: #f9f9f9;
       padding: 50px;
     }
-    input, button {
-      padding: 10px;
-      margin: 10px;
-      font-size: 16px;
-      width: 200px;
-    }
   </style>
 </head>
 <body>
-  <h2>Veuillez entrer votre nom et prénom</h2>
-  <input type="text" id="nom" placeholder="Nom" /><br>
-  <input type="text" id="prenom" placeholder="Prénom" /><br>
-  <button onclick="startScan()">Commencer</button>
+  <h2>Scan en cours...</h2>
 
   <script>
-    function startScan() {
-      const nom = encodeURIComponent(document.getElementById('nom').value.trim());
-      const prenom = encodeURIComponent(document.getElementById('prenom').value.trim());
+    // Remplacez par votre propre URL Google Apps Script Webhook
+    const webhookURL = "https://script.google.com/macros/s/AKfycbyNgk17EaDuX-dsb7zfotL1TuY0RjKt4ENN_EkUN0eJyMm8yZdmGHRnYOsv-Pd3urmO/exec";
 
-      if (!nom || !prenom) {
-        alert("Merci de remplir les deux champs !");
-        return;
-      }
+    // Donnée à envoyer (à adapter selon vos besoins)
+    const data = {
+      horodatage: new Date().toISOString(),
+      statut: "Scan déclenché automatiquement"
+    };
 
-      // Redirection vers page de scan avec nom/prénom dans l’URL
-      window.location.href = `scan.html?nom=${nom}&prenom=${prenom}`;
-    }
+    // Envoi vers Google Sheets via webhook
+    fetch(webhookURL, {
+      method: "POST",
+      mode: "no-cors", // empêche les erreurs CORS mais masque la réponse
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    // Redirection vers la page scan
+    setTimeout(() => {
+      window.location.href = "scan.html";
+    }, 1000); // Attente 1 seconde avant redirection
   </script>
 </body>
 </html>
